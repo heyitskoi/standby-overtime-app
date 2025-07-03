@@ -50,7 +50,7 @@
                     <div class="text-muted mt-2">
                         <i class="bi bi-calendar3"></i> Today ({{ today }})
                     </div>
-                    {% if current_standby == current_user|default('errol') %}
+                    {% if current_standby == current_user %}
                     <div class="alert alert-info mt-2 mb-0 py-1">
                         <small><i class="bi bi-info-circle"></i> You're on standby today!</small>
                     </div>
@@ -71,7 +71,7 @@
                     <div class="text-muted mt-2">
                         <i class="bi bi-calendar3"></i> Next week ({{ next_week }})
                     </div>
-                    {% if next_standby == current_user|default('errol') %}
+                    {% if next_standby == current_user %}
                     <div class="alert alert-warning mt-2 mb-0 py-1">
                         <small><i class="bi bi-exclamation-triangle"></i> You're on standby next week!</small>
                     </div>
@@ -306,7 +306,7 @@
                                 <div class="text-muted small">Week {{ i + 2 }}</div>
                                 <div class="fw-bold fs-5">{{ future_person }}</div>
                                 <div class="text-muted small">{{ future_date }}</div>
-                                {% if future_person == current_user|default('errol') %}
+                                {% if future_person == current_user %}
                                 <span class="badge bg-warning text-dark mt-2">You</span>
                                 {% endif %}
                             </div>

@@ -50,7 +50,7 @@ class Config:
         'Bob': '#28a745',
         'Charlie': '#ffc107',
         'Diana': '#dc3545',
-        'errol': '#17a2b8'
+        'errol': '#17a2b8'  # Keep for backward compatibility
     }
 
 # Create directories if they don't exist

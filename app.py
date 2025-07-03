@@ -1,8 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime, timedelta
 from utils.rotation_manager import get_standby_person, load_roster, save_roster
 from utils.overtime_logger import load_overtime_logs, validate_overtime_entry, save_overtime_entry
 from config import config, ensure_directories
+
+def get_current_standby_user():
+    """Get the current standby user for today"""
+    today = datetime.today().strftime('%Y-%m-%d')
+    return get_standby_person(today)
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -16,8 +21,8 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    # For now, assume current user is 'errol'
-    current_user = 'errol'
+    # Get current standby user
+    current_user = get_current_standby_user()
     today_dt = datetime.today()
     today = today_dt.strftime('%Y-%m-%d')
     next_week_dt = today_dt + timedelta(days=7)
@@ -364,8 +369,11 @@ def overtime():
         issue_description = request.form.get('issue_description', '')
         resolution_notes = request.form.get('resolution_notes', '')
 
-        start_date = start_time[:10]
-        person = get_standby_person(start_date)
+        # Get current standby user
+        current_user = get_current_standby_user()
+        
+        # Use current user for the overtime entry
+        person = current_user
 
         valid, duration_or_msg = validate_overtime_entry(start_time, end_time)
         if valid:
@@ -385,10 +393,25 @@ def overtime():
         return redirect(url_for('overtime', person=person))
 
     overtime_logs = load_overtime_logs(selected_person, year, month)
+    
+    # Calculate total hours
+    total_hours = 0.0
+    for log in overtime_logs:
+        if log.get('duration_hours'):
+            try:
+                total_hours += float(log['duration_hours'])
+            except (ValueError, TypeError):
+                pass
+    
+    # Get current standby user
+    current_user = get_current_standby_user()
+    
     return render_template('overtime.html',
                            overtime_logs=overtime_logs,
                            team_members=team_members,
-                           selected_person=selected_person)
+                           selected_person=selected_person,
+                           total_hours=total_hours,
+                           current_user=current_user)
 
 @app.route('/roster/edit_member', methods=['POST'])
 def edit_member():
@@ -409,6 +432,126 @@ def edit_member():
     save_roster(roster_data)
     flash(f'Team member {name_original} updated!', 'success')
     return redirect(url_for('roster'))
+
+@app.route('/api/current-standby')
+def api_current_standby():
+    """API endpoint to get current standby person"""
+    try:
+        today = datetime.today().strftime('%Y-%m-%d')
+        current_standby = get_standby_person(today)
+        return jsonify({
+            'current_standby': current_standby,
+            'date': today
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/total-hours')
+def api_total_hours():
+    """API endpoint to get total overtime hours for current month"""
+    try:
+        now = datetime.now()
+        year, month = now.year, now.month
+        
+        # Get current standby user
+        current_user = get_current_standby_user()
+        
+        # Load overtime logs for current user and month
+        overtime_logs = load_overtime_logs(current_user, year, month)
+        total_hours = sum(float(log.get('duration_hours', 0)) for log in overtime_logs)
+        
+        return jsonify({
+            'total_hours': round(total_hours, 1),
+            'month': month,
+            'year': year,
+            'user': current_user
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/roster-notifications')
+def api_roster_notifications():
+    """API endpoint to get roster-related notifications"""
+    try:
+        roster_data = load_roster()
+        team_members = roster_data.get('team_members', [])
+        overrides = roster_data.get('overrides', {})
+        
+        # Count inactive members
+        inactive_count = sum(1 for member in team_members if not member.get('active', True))
+        
+        # Count recent overrides (last 7 days)
+        today = datetime.today()
+        recent_overrides = 0
+        for date_str in overrides.keys():
+            try:
+                override_date = datetime.strptime(date_str, '%Y-%m-%d')
+                if (today - override_date).days <= 7:
+                    recent_overrides += 1
+            except ValueError:
+                continue
+        
+        # Count rotation changes (if any)
+        rotation_changes = 0  # This could be enhanced with a change log
+        
+        total_notifications = inactive_count + recent_overrides + rotation_changes
+        
+        return jsonify({
+            'count': total_notifications,
+            'inactive_members': inactive_count,
+            'recent_overrides': recent_overrides,
+            'rotation_changes': rotation_changes
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/overtime-notifications')
+def api_overtime_notifications():
+    """API endpoint to get overtime-related notifications"""
+    try:
+        now = datetime.now()
+        year, month = now.year, now.month
+        
+        # Get current standby user
+        current_user = get_current_standby_user()
+        
+        # Load overtime logs for current user and month
+        overtime_logs = load_overtime_logs(current_user, year, month)
+        
+        # Count recent overtime entries (last 24 hours)
+        yesterday = now - timedelta(days=1)
+        recent_entries = 0
+        high_hours_warning = 0
+        
+        total_hours = 0
+        for log in overtime_logs:
+            try:
+                hours = float(log.get('duration_hours', 0))
+                total_hours += hours
+                
+                # Check for recent entries
+                start_time_str = log.get('start_time', '')
+                if start_time_str:
+                    start_time = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M')
+                    if start_time >= yesterday:
+                        recent_entries += 1
+            except (ValueError, TypeError):
+                continue
+        
+        # Check for high hours warning
+        if total_hours > config.OVERTIME_WARNING_THRESHOLD:
+            high_hours_warning = 1
+        
+        total_notifications = recent_entries + high_hours_warning
+        
+        return jsonify({
+            'count': total_notifications,
+            'recent_entries': recent_entries,
+            'high_hours_warning': high_hours_warning,
+            'total_hours': round(total_hours, 1)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True) 
