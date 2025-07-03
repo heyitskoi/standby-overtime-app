@@ -4,43 +4,430 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h2 class="mb-4">Standby Rotation Calendar</h2>
-    <div id="calendar"></div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Standby Rotation Calendar</h2>
+        <div class="d-flex gap-2">
+            <button id="todayBtn" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-check"></i> Today
+            </button>
+            <div class="btn-group" role="group">
+                <button id="monthViewBtn" class="btn btn-outline-secondary active">Month</button>
+                <button id="weekViewBtn" class="btn btn-outline-secondary">Week</button>
+            </div>
+            <button id="exportBtn" class="btn btn-outline-success">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div id="calendarLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading calendar...</p>
+    </div>
+    
+    <!-- Error message -->
+    <div id="calendarError" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span id="errorMessage">Failed to load calendar data.</span>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    </div>
+    
+    <!-- Calendar container -->
+    <div id="calendar" class="d-none"></div>
+    
+    <!-- Legend -->
+    <div class="mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-palette"></i> Standby Legend
+                </h6>
+                <button id="toggleLegendBtn" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+            </div>
+            <div class="card-body" id="legendBody">
+                <div class="row" id="personLegend">
+                    <!-- Legend items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Standby Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Person:</strong>
+                        <p id="modalPerson"></p>
+                    </div>
+                    <div class="col-6">
+                        <strong>Date:</strong>
+                        <p id="modalDate"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Status:</strong>
+                        <p id="modalStatus"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/roster" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Manage Roster
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- FullCalendar & Bootstrap Theme -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/bootstrap5.global.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/bootstrap5.global.min.js"></script>
+<script src="{{ url_for('static', filename='js/calendar-utils.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var personColors = {
-        'Alice': '#007bff',
-        'Bob': '#28a745',
-        'Charlie': '#ffc107',
-        'Diana': '#dc3545'
-    };
-    // Use events passed from Flask
-    var events = {{ events|tojson|safe }};
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    // Initialize utilities
+    const utils = new CalendarUtils();
+    
+    // Configuration
+    const calendarEl = document.getElementById('calendar');
+    const loadingEl = document.getElementById('calendarLoading');
+    const errorEl = document.getElementById('calendarError');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const todayBtn = document.getElementById('todayBtn');
+    const monthViewBtn = document.getElementById('monthViewBtn');
+    const weekViewBtn = document.getElementById('weekViewBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const legendEl = document.getElementById('personLegend');
+    const toggleLegendBtn = document.getElementById('toggleLegendBtn');
+    const legendBody = document.getElementById('legendBody');
+    
+    // Person colors from backend (fallback to defaults)
+    const personColors = {{ config.THEME_COLORS|tojson|safe }};
+    const defaultPersonColors = {{ config.DEFAULT_PERSON_COLORS|tojson|safe }};
+    
+    // Events data from Flask
+    const events = {{ events|tojson|safe }};
+    
+    // Initialize calendar
+    let calendar = new FullCalendar.Calendar(calendarEl, {
         themeSystem: 'bootstrap5',
         initialView: 'dayGridMonth',
         headerToolbar: {
-            left: 'prev,next today',
+            left: 'prev,next',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek'
         },
         events: events,
         height: 'auto',
         eventDisplay: 'block',
+        eventTimeFormat: {
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short'
+        },
         eventDidMount: function(info) {
-            // Optionally, add a colored dot or icon for each person
+            const event = info.event;
+            const person = event.title;
+            const date = event.start.toISOString().split('T')[0];
+            const status = utils.getDateStatus(date);
+            
+            // Add status classes
+            if (date === utils.today) {
+                info.el.classList.add('fc-event-today');
+            } else if (date < utils.today) {
+                info.el.classList.add('fc-event-past');
+            } else {
+                info.el.classList.add('fc-event-future');
+            }
+            
+            // Add tooltip
+            info.el.setAttribute('data-bs-toggle', 'tooltip');
+            info.el.setAttribute('data-bs-placement', 'top');
+            info.el.setAttribute('data-bs-title', `${person} on standby - ${date} (${status})`);
+            
+            // Initialize Bootstrap tooltip
+            new bootstrap.Tooltip(info.el);
+        },
+        eventClick: function(info) {
+            const event = info.event;
+            const person = event.title;
+            const date = event.start.toISOString().split('T')[0];
+            const status = utils.getDateStatus(date);
+            
+            document.getElementById('modalPerson').textContent = person;
+            document.getElementById('modalDate').textContent = utils.formatDate(date);
+            document.getElementById('modalStatus').textContent = status;
+            
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            modal.show();
+        },
+        datesSet: function(info) {
+            updateViewButtons(info.view.type);
+            document.title = `${info.view.title} | Standby Overtime App`;
+        },
+        loading: function(isLoading) {
+            if (isLoading) {
+                loadingEl.classList.remove('d-none');
+                calendarEl.classList.add('d-none');
+                errorEl.classList.add('d-none');
+            } else {
+                loadingEl.classList.add('d-none');
+                calendarEl.classList.remove('d-none');
+            }
+        },
+        eventDidUnmount: function(info) {
+            const tooltip = bootstrap.Tooltip.getInstance(info.el);
+            if (tooltip) {
+                tooltip.dispose();
+            }
         }
     });
-    calendar.render();
+    
+    // Render calendar
+    try {
+        calendar.render();
+    } catch (error) {
+        console.error('Failed to render calendar:', error);
+        showError('Failed to initialize calendar. Please refresh the page.');
+    }
+    
+    // Event handlers
+    todayBtn.addEventListener('click', () => calendar.today());
+    
+    monthViewBtn.addEventListener('click', () => {
+        calendar.changeView('dayGridMonth');
+        updateViewButtons('dayGridMonth');
+    });
+    
+    weekViewBtn.addEventListener('click', () => {
+        calendar.changeView('timeGridWeek');
+        updateViewButtons('timeGridWeek');
+    });
+    
+    exportBtn.addEventListener('click', () => {
+        const events = calendar.getEvents();
+        const title = calendar.view.title;
+        utils.exportToCSV(events, title);
+        utils.showNotification('Calendar exported successfully!', 'success');
+    });
+    
+    toggleLegendBtn.addEventListener('click', () => {
+        const isVisible = !legendBody.classList.contains('d-none');
+        legendBody.classList.toggle('d-none');
+        toggleLegendBtn.innerHTML = isVisible ? 
+            '<i class="bi bi-chevron-down"></i>' : 
+            '<i class="bi bi-chevron-up"></i>';
+    });
+    
+    // Helper functions
+    function updateViewButtons(viewType) {
+        monthViewBtn.classList.toggle('active', viewType === 'dayGridMonth');
+        weekViewBtn.classList.toggle('active', viewType === 'timeGridWeek');
+    }
+    
+    function showError(message) {
+        errorMessageEl.textContent = message;
+        errorEl.classList.remove('d-none');
+        loadingEl.classList.add('d-none');
+        calendarEl.classList.add('d-none');
+    }
+    
+    // Generate legend
+    function generateLegend() {
+        legendEl.innerHTML = utils.generateLegendHTML(events, defaultPersonColors);
+    }
+    
+    // Initialize components
+    generateLegend();
+    utils.initResponsive(calendar);
+    utils.initKeyboardShortcuts(calendar);
+    
+    // Error handling
+    calendar.on('eventSourceFailure', function(error) {
+        console.error('Failed to load events:', error);
+        showError('Failed to load calendar events. Please refresh the page.');
+    });
+    
+    // Keyboard shortcuts help
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && e.key === 'k') {
+            utils.showKeyboardHelp();
+        }
+    });
+});
+</script>
+
+<style>
+/* Custom calendar styles */
+.fc-event {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.fc-event-today {
+    border: 2px solid #ffc107 !important;
+    font-weight: bold;
+}
+
+.fc-event-past {
+    opacity: 0.7;
+}
+
+.fc-event-future {
+    opacity: 1;
+}
+
+.fc-toolbar-title {
+    font-size: 1.5rem !important;
+    font-weight: 600;
+}
+
+.fc-button {
+    border-radius: 6px !important;
+}
+
+.fc-button-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.fc-button-primary:hover {
+    background-color: var(--bs-primary-dark) !important;
+    border-color: var(--bs-primary-dark) !important;
+}
+
+.fc-day-today {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .fc-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 1.2rem !important;
+    }
+    
+    .fc-event {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch !important;
+    }
+    
+    .d-flex.gap-2 {
+        justify-content: center;
+    }
+}
+
+/* Loading animation */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Legend styles */
+#personLegend .col-md-3 {
+    min-width: 120px;
+}
+
+/* Modal styles */
+.modal-body p {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Keyboard shortcut hint */
+.keyboard-shortcuts {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    z-index: 1000;
+    display: none;
+}
+
+.keyboard-shortcuts.show {
+    display: block;
+}
+
+/* Accessibility improvements */
+.fc-event:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .btn, .modal, .keyboard-shortcuts {
+        display: none !important;
+    }
+    
+    .fc-event {
+        break-inside: avoid;
+    }
+}
+</style>
+
+<!-- Keyboard shortcuts hint -->
+<div class="keyboard-shortcuts" id="keyboardShortcuts">
+    <strong>Keyboard Shortcuts:</strong><br>
+    ← → Navigate months<br>
+    T - Go to today<br>
+    M - Month view<br>
+    W - Week view
+</div>
+
+<script>
+// Show keyboard shortcuts on Alt+K
+document.addEventListener('keydown', function(e) {
+    if (e.altKey && e.key === 'k') {
+        const shortcuts = document.getElementById('keyboardShortcuts');
+        shortcuts.classList.toggle('show');
+        setTimeout(() => {
+            shortcuts.classList.remove('show');
+        }, 3000);
+    }
 });
 </script>
 {% endblock %} 

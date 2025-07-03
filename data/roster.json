@@ -1,7 +1,7 @@
 {
   "team_members": [
     {
-      "name": "errol",
+      "name": "Errol Caughey",
       "color": "#007bff",
       "active": true
     },
@@ -13,7 +13,7 @@
     {
       "name": "errol-test",
       "color": "#1e3752",
-      "active": true
+      "active": false
     },
     {
       "name": "junior",
@@ -28,8 +28,7 @@
   ],
   "overrides": {},
   "rotation": [
-    "test-1",
-    "errol",
-    "Braden"
+    "Braden",
+    "Errol Caughey"
   ]
 }

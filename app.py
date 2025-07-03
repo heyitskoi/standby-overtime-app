@@ -2,15 +2,22 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime, timedelta
 from utils.rotation_manager import get_standby_person, load_roster, save_roster
 from utils.overtime_logger import load_overtime_logs, validate_overtime_entry, save_overtime_entry
-import os
+from config import config, ensure_directories
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super-secret-key-change-this')
+app.secret_key = config.SECRET_KEY
+
+# Ensure required directories exist
+ensure_directories()
+
+@app.route('/')
+def index():
+    return redirect(url_for('dashboard'))
 
 @app.route('/dashboard')
 def dashboard():
     # For now, assume current user is 'errol'
-    person = 'errol'
+    current_user = 'errol'
     today_dt = datetime.today()
     today = today_dt.strftime('%Y-%m-%d')
     next_week_dt = today_dt + timedelta(days=7)
@@ -20,63 +27,188 @@ def dashboard():
     year = today_dt.year
     month = today_dt.month
     month_name = today_dt.strftime('%B')
+    
     # Load and sum overtime logs for this month
-    overtime_logs = load_overtime_logs(person, year, month)
+    overtime_logs = load_overtime_logs(current_user, year, month)
     total_overtime_hours = sum(float(log.get('duration_hours', 0)) for log in overtime_logs)
-    # Load overrides from roster.json
+    
+    # Load roster data for team members and overrides
     roster_data = load_roster()
+    team_members = [m for m in roster_data.get('team_members', []) if m.get('active', True)]
     overrides = roster_data.get('overrides', {})
+    
     # Sort overrides by date descending, get 5 most recent
     sorted_overrides = sorted(overrides.items(), key=lambda x: x[0], reverse=True)
     recent_overrides = [
         {'date': date, 'person': person}
         for date, person in sorted_overrides[:5]
     ]
+    
+    # Get recent overtime activity (last 5 entries across all team members)
+    recent_overtime = []
+    for member in team_members:
+        member_logs = load_overtime_logs(member['name'], year, month)
+        recent_overtime.extend(member_logs[:2])  # Get 2 most recent per member
+    
+    # Sort by start time and get 5 most recent
+    recent_overtime.sort(key=lambda x: x.get('start_time', ''), reverse=True)
+    recent_overtime = recent_overtime[:5]
+    
+    # Generate notifications
+    notifications = []
+    if current_standby == current_user:
+        notifications.append("You are currently on standby duty")
+    if next_standby == current_user:
+        notifications.append("You will be on standby next week")
+    if total_overtime_hours > config.OVERTIME_WARNING_THRESHOLD:
+        notifications.append(f"High overtime this month: {total_overtime_hours:.1f} hours")
+    
+    # Monthly overtime limit from config
+    monthly_overtime_limit = config.MONTHLY_OVERTIME_LIMIT
+    
     return render_template(
         'dashboard.html',
+        current_user=current_user,
         current_standby=current_standby,
         next_standby=next_standby,
         today=today,
         next_week=next_week,
-        total_overtime_hours=f"{total_overtime_hours:.2f}",
+        total_overtime_hours=total_overtime_hours,
         month_name=month_name,
         year=year,
-        recent_overrides=recent_overrides
+        recent_overrides=recent_overrides,
+        recent_overtime=recent_overtime,
+        team_members=team_members,
+        today_dt=today_dt,
+        get_standby_person=get_standby_person,
+        timedelta=timedelta,
+        notifications=notifications,
+        monthly_overtime_limit=monthly_overtime_limit,
+        config=config
     )
 
 @app.route('/calendar')
 def calendar():
-    # Determine current month and year
-    today = datetime.today()
-    year = request.args.get('year', today.year, type=int)
-    month = request.args.get('month', today.month, type=int)
-    # First and last day of the month
-    first_day = datetime(year, month, 1)
-    if month == 12:
-        next_month = datetime(year + 1, 1, 1)
-    else:
-        next_month = datetime(year, month + 1, 1)
-    num_days = (next_month - first_day).days
-    # Hardcoded color mapping for demonstration
-    person_colors = {
-        'Alice': '#007bff',
-        'Bob': '#28a745',
-        'Charlie': '#ffc107',
-        'Diana': '#dc3545'
-    }
-    events = []
-    for i in range(num_days):
-        day = first_day + timedelta(days=i)
-        date_str = day.strftime('%Y-%m-%d')
-        person = get_standby_person(date_str)
-        if person:
-            events.append({
-                'title': person,
-                'start': date_str,
-                'end': date_str,  # single-day event
-                'color': person_colors.get(person, '#6c757d')
-            })
-    return render_template('calendar.html', events=events)
+    try:
+        # Determine current month and year
+        today = datetime.today()
+        year = request.args.get('year', today.year, type=int)
+        month = request.args.get('month', today.month, type=int)
+        
+        # Validate year and month
+        if year < 1900 or year > 2100:
+            year = today.year
+        if month < 1 or month > 12:
+            month = today.month
+        
+        # First and last day of the month
+        first_day = datetime(year, month, 1)
+        if month == 12:
+            next_month = datetime(year + 1, 1, 1)
+        else:
+            next_month = datetime(year, month + 1, 1)
+        num_days = (next_month - first_day).days
+        
+        # Load roster data for colors
+        roster_data = load_roster()
+        team_members = {m['name']: m.get('color', '#6c757d') for m in roster_data.get('team_members', [])}
+        person_colors = {**config.DEFAULT_PERSON_COLORS, **team_members}
+        
+        events = []
+        today_str = today.strftime('%Y-%m-%d')
+        
+        for i in range(num_days):
+            day = first_day + timedelta(days=i)
+            date_str = day.strftime('%Y-%m-%d')
+            person = get_standby_person(date_str)
+            
+            if person:
+                # Determine if this is today, past, or future
+                is_today = date_str == today_str
+                is_past = date_str < today_str
+                
+                event_data = {
+                    'title': person,
+                    'start': date_str,
+                    'end': date_str,  # single-day event
+                    'color': person_colors.get(person, '#6c757d'),
+                    'extendedProps': {
+                        'isToday': is_today,
+                        'isPast': is_past,
+                        'isOverride': date_str in roster_data.get('overrides', {})
+                    }
+                }
+                
+                # Add special styling for today
+                if is_today:
+                    event_data['classNames'] = ['fc-event-today']
+                
+                events.append(event_data)
+        
+        return render_template('calendar.html', events=events, config=config)
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Calendar error: {e}")
+        # Return a minimal template with error handling
+        return render_template('calendar.html', events=[], config=config)
+
+@app.route('/api/calendar/<int:year>/<int:month>')
+def api_calendar(year, month):
+    """API endpoint for calendar data"""
+    try:
+        # Validate year and month
+        if year < 1900 or year > 2100 or month < 1 or month > 12:
+            return {'error': 'Invalid year or month'}, 400
+        
+        # First and last day of the month
+        first_day = datetime(year, month, 1)
+        if month == 12:
+            next_month = datetime(year + 1, 1, 1)
+        else:
+            next_month = datetime(year, month + 1, 1)
+        num_days = (next_month - first_day).days
+        
+        # Load roster data for colors
+        roster_data = load_roster()
+        team_members = {m['name']: m.get('color', '#6c757d') for m in roster_data.get('team_members', [])}
+        person_colors = {**config.DEFAULT_PERSON_COLORS, **team_members}
+        
+        events = []
+        today = datetime.today()
+        today_str = today.strftime('%Y-%m-%d')
+        
+        for i in range(num_days):
+            day = first_day + timedelta(days=i)
+            date_str = day.strftime('%Y-%m-%d')
+            person = get_standby_person(date_str)
+            
+            if person:
+                is_today = date_str == today_str
+                is_past = date_str < today_str
+                
+                event_data = {
+                    'title': person,
+                    'start': date_str,
+                    'end': date_str,
+                    'color': person_colors.get(person, '#6c757d'),
+                    'extendedProps': {
+                        'isToday': is_today,
+                        'isPast': is_past,
+                        'isOverride': date_str in roster_data.get('overrides', {})
+                    }
+                }
+                
+                if is_today:
+                    event_data['classNames'] = ['fc-event-today']
+                
+                events.append(event_data)
+        
+        return {'events': events, 'month': month, 'year': year}
+        
+    except Exception as e:
+        print(f"API Calendar error: {e}")
+        return {'error': 'Failed to load calendar data'}, 500
 
 @app.route('/roster', methods=['GET'])
 def roster():
@@ -84,7 +216,8 @@ def roster():
     team_members = roster_data.get('team_members', [])
     overrides = roster_data.get('overrides', {})
     rotation = roster_data.get('rotation', [])
-    return render_template('roster.html', team_members=team_members, overrides=overrides, rotation=rotation)
+    today = datetime.today().strftime('%Y-%m-%d')
+    return render_template('roster.html', team_members=team_members, overrides=overrides, rotation=rotation, today=today)
 
 @app.route('/roster/add_member', methods=['POST'])
 def add_member():
@@ -107,15 +240,28 @@ def add_member():
 def add_override():
     roster_data = load_roster()
     overrides = roster_data.get('overrides', {})
-    date = request.form.get('override_date')
+    start_date = request.form.get('override_start_date')
+    end_date = request.form.get('override_end_date')
     person = request.form.get('override_person')
-    if not date or not person:
-        flash('Date and person are required for override.', 'warning')
+    
+    if not start_date or not end_date or not person:
+        flash('Start date, end date, and person are required for override.', 'warning')
         return redirect(url_for('roster'))
-    overrides[date] = person
+    
+    # Add overrides for each date in the range
+    from datetime import datetime, timedelta
+    start = datetime.strptime(start_date, '%Y-%m-%d')
+    end = datetime.strptime(end_date, '%Y-%m-%d')
+    
+    current = start
+    while current <= end:
+        date_str = current.strftime('%Y-%m-%d')
+        overrides[date_str] = person
+        current += timedelta(days=1)
+    
     roster_data['overrides'] = overrides
     save_roster(roster_data)
-    flash('Override added!', 'success')
+    flash(f'Override added for {start_date} to {end_date}!', 'success')
     return redirect(url_for('roster'))
 
 @app.route('/roster/remove_override', methods=['POST'])
@@ -243,6 +389,26 @@ def overtime():
                            overtime_logs=overtime_logs,
                            team_members=team_members,
                            selected_person=selected_person)
+
+@app.route('/roster/edit_member', methods=['POST'])
+def edit_member():
+    roster_data = load_roster()
+    name_original = request.form.get('name_original')
+    name = request.form.get('name')
+    color = request.form.get('color')
+    active = bool(request.form.get('active'))
+    
+    # Find and update the member
+    for member in roster_data.get('team_members', []):
+        if member.get('name') == name_original:
+            member['name'] = name
+            member['color'] = color
+            member['active'] = active
+            break
+    
+    save_roster(roster_data)
+    flash(f'Team member {name_original} updated!', 'success')
+    return redirect(url_for('roster'))
 
 if __name__ == '__main__':
     app.run(debug=True) 
