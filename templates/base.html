@@ -23,7 +23,7 @@
             --sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             --notification-badge: #ff4757;
             
-            /* Enhanced main content theme variables */
+            /* Harmonious main content theme variables */
             --main-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --main-bg-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --card-bg: rgba(255, 255, 255, 0.95);
@@ -31,10 +31,45 @@
             --card-border: rgba(255, 255, 255, 0.2);
             --text-primary: #2c3e50;
             --text-secondary: #6c757d;
-            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            
+            /* Harmonious color palette - no clashing colors */
+            --primary-color: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #3730a3;
+            --primary-bg: rgba(79, 70, 229, 0.1);
+            
+            --success-color: #059669;
+            --success-light: #10b981;
+            --success-dark: #047857;
+            --success-bg: rgba(5, 150, 105, 0.1);
+            
+            --warning-color: #d97706;
+            --warning-light: #f59e0b;
+            --warning-dark: #b45309;
+            --warning-bg: rgba(217, 119, 6, 0.1);
+            
+            --info-color: #0891b2;
+            --info-light: #06b6d4;
+            --info-dark: #0e7490;
+            --info-bg: rgba(8, 145, 178, 0.1);
+            
+            --secondary-color: #6b7280;
+            --secondary-light: #9ca3af;
+            --secondary-dark: #4b5563;
+            --secondary-bg: rgba(107, 114, 128, 0.1);
+            
+            --danger-color: #dc2626;
+            --danger-light: #ef4444;
+            --danger-dark: #b91c1c;
+            --danger-bg: rgba(220, 38, 38, 0.1);
+            
+            /* Enhanced gradients with harmonious colors */
+            --accent-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            --success-gradient: linear-gradient(135deg, var(--success-color) 0%, var(--success-light) 100%);
+            --warning-gradient: linear-gradient(135deg, var(--warning-color) 0%, var(--warning-light) 100%);
+            --info-gradient: linear-gradient(135deg, var(--info-color) 0%, var(--info-light) 100%);
+            --secondary-gradient: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-light) 100%);
+            --danger-gradient: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-light) 100%);
         }
 
         body {
@@ -363,7 +398,7 @@
             z-index: 10;
         }
 
-        /* Enhanced Card Styling */
+        /* Enhanced Card Styling with Harmonious Colors */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -405,6 +440,43 @@
             position: relative;
         }
 
+        /* Card header color variants */
+        .card-header.bg-primary {
+            background: var(--accent-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-success {
+            background: var(--success-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-warning {
+            background: var(--warning-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-info {
+            background: var(--info-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-secondary {
+            background: var(--secondary-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-danger {
+            background: var(--danger-gradient) !important;
+            color: white !important;
+        }
+
+        .card-header.bg-light {
+            background: #f8f9fa !important;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid #dee2e6;
+        }
+
         .card-body {
             padding: 1.5rem;
             color: var(--text-secondary);
@@ -442,7 +514,7 @@
             border-radius: 2px;
         }
 
-        /* Enhanced Buttons */
+        /* Enhanced Buttons with Harmonious Colors */
         .btn {
             border-radius: 12px;
             font-weight: 600;
@@ -469,32 +541,169 @@
             left: 100%;
         }
 
+        /* Primary buttons */
         .btn-primary {
             background: var(--accent-gradient);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
         }
 
         .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6);
+            color: white;
         }
 
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Success buttons */
         .btn-success {
             background: var(--success-gradient);
-            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+            color: white;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
         }
 
+        .btn-success:hover {
+            background: linear-gradient(135deg, var(--success-dark) 0%, var(--success-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.6);
+            color: white;
+        }
+
+        .btn-outline-success {
+            border: 2px solid var(--success-color);
+            color: var(--success-color);
+            background: transparent;
+        }
+
+        .btn-outline-success:hover {
+            background: var(--success-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+        }
+
+        /* Warning buttons */
         .btn-warning {
             background: var(--warning-gradient);
-            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+            color: white;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
         }
 
+        .btn-warning:hover {
+            background: linear-gradient(135deg, var(--warning-dark) 0%, var(--warning-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(217, 119, 6, 0.6);
+            color: white;
+        }
+
+        .btn-outline-warning {
+            border: 2px solid var(--warning-color);
+            color: var(--warning-color);
+            background: transparent;
+        }
+
+        .btn-outline-warning:hover {
+            background: var(--warning-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+        }
+
+        /* Info buttons */
         .btn-info {
             background: var(--info-gradient);
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            color: white;
+            box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
         }
 
-        /* Enhanced Tables */
+        .btn-info:hover {
+            background: linear-gradient(135deg, var(--info-dark) 0%, var(--info-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(8, 145, 178, 0.6);
+            color: white;
+        }
+
+        .btn-outline-info {
+            border: 2px solid var(--info-color);
+            color: var(--info-color);
+            background: transparent;
+        }
+
+        .btn-outline-info:hover {
+            background: var(--info-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);
+        }
+
+        /* Secondary buttons */
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--secondary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.6);
+            color: white;
+        }
+
+        .btn-outline-secondary {
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            background: transparent;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        }
+
+        /* Danger buttons */
+        .btn-danger {
+            background: var(--danger-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
+            color: white;
+        }
+
+        .btn-outline-danger {
+            border: 2px solid var(--danger-color);
+            color: var(--danger-color);
+            background: transparent;
+        }
+
+        .btn-outline-danger:hover {
+            background: var(--danger-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Enhanced Tables with Harmonious Colors */
         .table {
             background: var(--card-bg);
             border-radius: 12px;
@@ -503,7 +712,7 @@
         }
 
         .table thead th {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            background: var(--primary-bg);
             border: none;
             color: var(--text-primary);
             font-weight: 600;
@@ -518,7 +727,7 @@
         }
 
         .table tbody tr:hover {
-            background: rgba(102, 126, 234, 0.05);
+            background: var(--primary-bg);
             transform: scale(1.01);
         }
 
@@ -527,6 +736,15 @@
             border: none;
             border-bottom: 1px solid var(--card-border);
             color: var(--text-secondary);
+        }
+
+        .table-light {
+            background: #f8f9fa !important;
+        }
+
+        .table-light th {
+            background: #e9ecef !important;
+            color: var(--text-primary) !important;
         }
 
         /* Enhanced Form Elements */
@@ -545,7 +763,7 @@
             background: rgba(255, 255, 255, 0.98);
         }
 
-        /* Enhanced Alerts */
+        /* Enhanced Alerts with Harmonious Colors */
         .alert {
             border-radius: 12px;
             border: none;
@@ -554,47 +772,109 @@
         }
 
         .alert-primary {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            color: #667eea;
+            background: var(--primary-bg);
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
         }
 
         .alert-success {
-            background: linear-gradient(135deg, rgba(86, 171, 47, 0.1) 0%, rgba(168, 230, 207, 0.1) 100%);
-            color: #56ab2f;
+            background: var(--success-bg);
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
         }
 
         .alert-warning {
-            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
-            color: #f093fb;
+            background: var(--warning-bg);
+            color: var(--warning-color);
+            border-left: 4px solid var(--warning-color);
         }
 
         .alert-info {
-            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
-            color: #4facfe;
+            background: var(--info-bg);
+            color: var(--info-color);
+            border-left: 4px solid var(--info-color);
         }
 
-        /* Enhanced Badges */
+        .alert-secondary {
+            background: var(--secondary-bg);
+            color: var(--secondary-color);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        /* Enhanced Badges with Harmonious Colors */
         .badge {
             border-radius: 8px;
             font-weight: 600;
             letter-spacing: 0.5px;
             padding: 0.5rem 0.75rem;
+            color: white;
         }
 
-        .badge-primary {
-            background: var(--accent-gradient);
+        .badge-primary, .bg-primary {
+            background: var(--accent-gradient) !important;
+            color: white !important;
         }
 
-        .badge-success {
-            background: var(--success-gradient);
+        .badge-success, .bg-success {
+            background: var(--success-gradient) !important;
+            color: white !important;
         }
 
-        .badge-warning {
-            background: var(--warning-gradient);
+        .badge-warning, .bg-warning {
+            background: var(--warning-gradient) !important;
+            color: white !important;
         }
 
-        .badge-info {
-            background: var(--info-gradient);
+        .badge-info, .bg-info {
+            background: var(--info-gradient) !important;
+            color: white !important;
+        }
+
+        .badge-secondary, .bg-secondary {
+            background: var(--secondary-gradient) !important;
+            color: white !important;
+        }
+
+        .badge-danger, .bg-danger {
+            background: var(--danger-gradient) !important;
+            color: white !important;
+        }
+
+        .badge-light, .bg-light {
+            background: #f8f9fa !important;
+            color: var(--text-primary) !important;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Text color utilities */
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .text-success {
+            color: var(--success-color) !important;
+        }
+
+        .text-warning {
+            color: var(--warning-color) !important;
+        }
+
+        .text-info {
+            color: var(--info-color) !important;
+        }
+
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+
+        .text-danger {
+            color: var(--danger-color) !important;
         }
 
         /* Enhanced Progress Bars */
@@ -627,7 +907,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        /* Enhanced Modal */
+        /* Enhanced Modal with Harmonious Colors */
         .modal-content {
             background: var(--card-bg);
             border-radius: 16px;
@@ -641,9 +921,48 @@
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
         }
 
+        .modal-header.bg-primary {
+            background: var(--accent-gradient) !important;
+            color: white !important;
+        }
+
+        .modal-header.bg-success {
+            background: var(--success-gradient) !important;
+            color: white !important;
+        }
+
+        .modal-header.bg-warning {
+            background: var(--warning-gradient) !important;
+            color: white !important;
+        }
+
+        .modal-header.bg-info {
+            background: var(--info-gradient) !important;
+            color: white !important;
+        }
+
         .modal-footer {
             border-top: 1px solid var(--card-border);
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.1) 100%);
+        }
+
+        /* Prevent multiple modal backdrops */
+        .modal-backdrop {
+            z-index: 1040;
+        }
+
+        .modal-backdrop + .modal-backdrop {
+            z-index: 1039;
+        }
+
+        /* Ensure only one backdrop is visible */
+        .modal-backdrop.show {
+            z-index: 1040;
+        }
+
+        /* Remove duplicate backdrops */
+        .modal-backdrop:not(:first-of-type) {
+            display: none !important;
         }
 
         /* Enhanced Dropdown */
@@ -1332,6 +1651,36 @@
         // Initialize sidebar when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             window.sidebarManager = new SidebarManager();
+            
+            // Prevent multiple modal backdrops
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        if (backdrops.length > 1) {
+                            // Keep only the first backdrop
+                            for (let i = 1; i < backdrops.length; i++) {
+                                backdrops[i].remove();
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            // Clean up modal backdrops when modals are hidden
+            document.addEventListener('hidden.bs.modal', function(event) {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 1) {
+                    for (let i = 1; i < backdrops.length; i++) {
+                        backdrops[i].remove();
+                    }
+                }
+            });
         });
 
         // Cleanup on page unload
