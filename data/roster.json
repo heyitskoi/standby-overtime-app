@@ -19,14 +19,17 @@
       "name": "junior",
       "color": "#ff0000",
       "active": true
+    },
+    {
+      "name": "test-1",
+      "color": "#00ff2a",
+      "active": true
     }
   ],
   "overrides": {
     "2025-07-03": "Braden"
   },
   "rotation": [
-    "Braden",
-    "junior",
-    "errol"
+    "test-1"
   ]
 }

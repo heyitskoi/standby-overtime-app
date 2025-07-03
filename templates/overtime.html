@@ -32,24 +32,24 @@
         <table class="table table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th scope="col">Start Time</th>
-                    <th scope="col">End Time</th>
-                    <th scope="col">Issue Description</th>
-                    <th scope="col">Resolution Notes</th>
+                    <th>Person</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Issue Description</th>
+                    <th>Resolution Notes</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in overtime_logs %}
                 <tr>
+                    <td>{{ log.person }}</td>
                     <td>{{ log.start_time }}</td>
                     <td>{{ log.end_time }}</td>
                     <td>{{ log.issue_description or '' }}</td>
                     <td>{{ log.resolution_notes or '' }}</td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">No overtime logs for this month.</td>
-                </tr>
+                <tr><td colspan="5" class="text-center text-muted">No overtime logs for this month.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

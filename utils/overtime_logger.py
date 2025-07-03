@@ -7,7 +7,12 @@ from reportlab.pdfgen import canvas
 LOGS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
 
 FIELDNAMES = [
-    'start_time', 'end_time', 'duration_hours', 'issue_description', 'resolution_notes'
+    'person',
+    'start_time',
+    'end_time',
+    'duration_hours',
+    'issue_description',
+    'resolution_notes'
 ]
 
 def get_log_path(person, year, month):

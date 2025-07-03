@@ -185,11 +185,17 @@ def overtime():
         end_time = request.form.get('end_time')
         issue_description = request.form.get('issue_description', '')
         resolution_notes = request.form.get('resolution_notes', '')
+        
+        # Get the standby person for the start date
+        start_date = start_time[:10]  # YYYY-MM-DD
+        person = get_standby_person(start_date)
+        
         valid, duration_or_msg = validate_overtime_entry(start_time, end_time)
         if not valid:
             flash(duration_or_msg, 'danger')
         else:
             entry = {
+                'person': person,
                 'start_time': start_time,
                 'end_time': end_time,
                 'duration_hours': f"{duration_or_msg:.2f}",
