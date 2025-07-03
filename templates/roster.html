@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Roster | Standby Overtime App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Manage Team Roster</h2>
+    <div class="row">
+        <!-- Add Team Member Form -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-person-plus"></i> Add New Team Member
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/roster/add_member">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <input type="color" class="form-control form-control-color" id="color" name="color" value="#007bff" title="Choose color">
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+                            <label class="form-check-label" for="active">Active</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Member</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Add Override Form -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-calendar-plus"></i> Add Date Override
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/roster/add_override">
+                        <div class="mb-3">
+                            <label for="override_date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="override_date" name="override_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="override_person" class="form-label">Person</label>
+                            <select class="form-select" id="override_person" name="override_person" required>
+                                <option value="" disabled selected>Select person</option>
+                                {% for member in team_members %}
+                                    <option value="{{ member.name }}">{{ member.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning"><i class="bi bi-calendar-plus"></i> Add Override</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Team Members Table -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <i class="bi bi-people"></i> Current Team Members
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Color</th>
+                            <th>Active</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in team_members %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>
+                                <span style="display:inline-block;width:1.5em;height:1.5em;border-radius:0.25em;vertical-align:middle;background-color: {{ member.color }}; border:1px solid #ccc;"></span>
+                                <span class="ms-2">{{ member.color }}</span>
+                            </td>
+                            <td>
+                                {% if member.active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.active and member.name not in rotation %}
+                                <form method="post" action="/roster/update_rotation" class="d-inline">
+                                  {% for p in rotation %}
+                                    <input type="hidden" name="rotation[]" value="{{ p }}">
+                                  {% endfor %}
+                                    <button type="submit" name="add" value="{{ member.name }}" class="btn btn-sm btn-outline-success">Add to Rotation</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted">No team members yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Standby Rotation Pattern Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <i class="bi bi-arrow-repeat"></i> Standby Rotation Pattern
+        </div>
+        <div class="card-body">
+            <form method="post" action="/roster/update_rotation">
+                <ul class="list-group mb-3">
+                    {% for person in rotation %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ person }}</span>
+                            <div>
+                                <button type="submit" name="move" value="up:{{ loop.index0 }}" class="btn btn-sm btn-outline-primary">&#8593;</button>
+                                <button type="submit" name="move" value="down:{{ loop.index0 }}" class="btn btn-sm btn-outline-primary">&#8595;</button>
+                                <button type="submit" name="remove" value="{{ person }}" class="btn btn-sm btn-outline-danger">Remove</button>
+                            </div>
+                            <input type="hidden" name="rotation[]" value="{{ person }}">
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">No people in rotation yet.</li>
+                    {% endfor %}
+                </ul>
+                <button type="submit" name="save" value="1" class="btn btn-success">Save Changes</button>
+            </form>
+        </div>
+    </div>
+    <!-- Overrides Table (Optional: show recent overrides) -->
+    {% if overrides %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <i class="bi bi-calendar-event"></i> Date Overrides
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Person</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for date, person in overrides.items() %}
+                        <tr>
+                            <td>{{ date }}</td>
+                            <td>{{ person }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

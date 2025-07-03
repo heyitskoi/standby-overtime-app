@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar | Standby Overtime App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Standby Rotation Calendar</h2>
+    <div id="calendar"></div>
+</div>
+
+<!-- FullCalendar & Bootstrap Theme -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/bootstrap5.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/bootstrap5.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var personColors = {
+        'Alice': '#007bff',
+        'Bob': '#28a745',
+        'Charlie': '#ffc107',
+        'Diana': '#dc3545'
+    };
+    // Use events passed from Flask
+    var events = {{ events|tojson|safe }};
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        themeSystem: 'bootstrap5',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: events,
+        height: 'auto',
+        eventDisplay: 'block',
+        eventDidMount: function(info) {
+            // Optionally, add a colored dot or icon for each person
+        }
+    });
+    calendar.render();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Standby Overtime App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Dashboard</h2>
+    <div class="row g-4 mb-4">
+        <!-- Current Standby -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Current Standby</h5>
+                    <span class="badge bg-primary fs-5">{{ current_standby }}</span>
+                    <div class="text-muted mt-2">Today ({{ today }})</div>
+                </div>
+            </div>
+        </div>
+        <!-- Next Standby -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Next Week's Standby</h5>
+                    <span class="badge bg-info text-dark fs-5">{{ next_standby }}</span>
+                    <div class="text-muted mt-2">Next week ({{ next_week }})</div>
+                </div>
+            </div>
+        </div>
+        <!-- Overtime Hours -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Overtime (This Month)</h5>
+                    <span class="badge bg-success fs-5">{{ total_overtime_hours }} hrs</span>
+                    <div class="text-muted mt-2">{{ month_name }} {{ year }}</div>
+                </div>
+            </div>
+        </div>
+        <!-- Recent Overrides -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Recent Overrides</h5>
+                    {% if recent_overrides %}
+                        <ul class="list-group list-group-flush">
+                            {% for override in recent_overrides %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-calendar-event"></i> {{ override.date }}</span>
+                                <span class="badge bg-warning text-dark">{{ override.person }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-muted">No recent overrides</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Optionally, more dashboard content here -->
+</div>
+{% endblock %} 

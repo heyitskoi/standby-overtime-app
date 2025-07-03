@@ -1,0 +1,32 @@
+{
+  "team_members": [
+    {
+      "name": "errol",
+      "color": "#007bff",
+      "active": true
+    },
+    {
+      "name": "Braden",
+      "color": "#000000",
+      "active": true
+    },
+    {
+      "name": "errol-test",
+      "color": "#1e3752",
+      "active": true
+    },
+    {
+      "name": "junior",
+      "color": "#ff0000",
+      "active": true
+    }
+  ],
+  "overrides": {
+    "2025-07-03": "Braden"
+  },
+  "rotation": [
+    "Braden",
+    "junior",
+    "errol"
+  ]
+}
