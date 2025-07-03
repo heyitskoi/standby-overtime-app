@@ -26,10 +26,9 @@
       "active": true
     }
   ],
-  "overrides": {
-    "2025-07-03": "Braden"
-  },
+  "overrides": {},
   "rotation": [
+    "errol",
     "test-1"
   ]
 }

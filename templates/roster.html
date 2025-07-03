@@ -40,8 +40,12 @@
                 <div class="card-body">
                     <form method="post" action="/roster/add_override">
                         <div class="mb-3">
-                            <label for="override_date" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="override_date" name="override_date" required>
+                            <label for="override_start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="override_start_date" name="override_start_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="override_end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="override_end_date" name="override_end_date" required>
                         </div>
                         <div class="mb-3">
                             <label for="override_person" class="form-label">Person</label>
@@ -147,6 +151,7 @@
                         <tr>
                             <th>Date</th>
                             <th>Person</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -154,6 +159,12 @@
                         <tr>
                             <td>{{ date }}</td>
                             <td>{{ person }}</td>
+                            <td>
+                                <form method="post" action="/roster/remove_override" class="d-inline">
+                                    <input type="hidden" name="date" value="{{ date }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

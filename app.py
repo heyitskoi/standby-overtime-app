@@ -118,6 +118,20 @@ def add_override():
     flash('Override added!', 'success')
     return redirect(url_for('roster'))
 
+@app.route('/roster/remove_override', methods=['POST'])
+def remove_override():
+    roster_data = load_roster()
+    date = request.form.get('date')
+    overrides = roster_data.get('overrides', {})
+    if date in overrides:
+        overrides.pop(date)
+        roster_data['overrides'] = overrides
+        save_roster(roster_data)
+        flash(f'Override for {date} removed.', 'success')
+    else:
+        flash('Override not found.', 'warning')
+    return redirect(url_for('roster'))
+
 @app.route('/roster/update_rotation', methods=['POST'])
 def update_rotation():
     roster_data = load_roster()
@@ -175,25 +189,28 @@ def update_rotation():
 
 @app.route('/overtime', methods=['GET', 'POST'])
 def overtime():
-    # For now, assume current user is 'errol'
-    person = 'errol'
     now = datetime.now()
-    year = now.year
-    month = now.month
+    year, month = now.year, now.month
+    roster_data = load_roster()
+    team_members = roster_data.get('team_members', [])
+
+    # For GET
+    selected_person = request.args.get('person')
+    if not selected_person:
+        today_str = now.strftime('%Y-%m-%d')
+        selected_person = get_standby_person(today_str)
+
     if request.method == 'POST':
         start_time = request.form.get('start_time')
         end_time = request.form.get('end_time')
         issue_description = request.form.get('issue_description', '')
         resolution_notes = request.form.get('resolution_notes', '')
-        
-        # Get the standby person for the start date
-        start_date = start_time[:10]  # YYYY-MM-DD
+
+        start_date = start_time[:10]
         person = get_standby_person(start_date)
-        
+
         valid, duration_or_msg = validate_overtime_entry(start_time, end_time)
-        if not valid:
-            flash(duration_or_msg, 'danger')
-        else:
+        if valid:
             entry = {
                 'person': person,
                 'start_time': start_time,
@@ -204,9 +221,16 @@ def overtime():
             }
             save_overtime_entry(person, year, month, entry)
             flash('Overtime entry saved!', 'success')
-        # After POST, reload logs and show page
-    overtime_logs = load_overtime_logs(person, year, month)
-    return render_template('overtime.html', overtime_logs=overtime_logs)
+        else:
+            flash(duration_or_msg, 'danger')
+
+        return redirect(url_for('overtime', person=person))
+
+    overtime_logs = load_overtime_logs(selected_person, year, month)
+    return render_template('overtime.html',
+                           overtime_logs=overtime_logs,
+                           team_members=team_members,
+                           selected_person=selected_person)
 
 if __name__ == '__main__':
     app.run(debug=True) 
