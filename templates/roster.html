@@ -51,7 +51,7 @@
                             <label for="override_person" class="form-label">Person</label>
                             <select class="form-select" id="override_person" name="override_person" required>
                                 <option value="" disabled selected>Select person</option>
-                                {% for member in team_members %}
+                                {% for member in team_members if member.active %}
                                     <option value="{{ member.name }}">{{ member.name }}</option>
                                 {% endfor %}
                             </select>
@@ -87,11 +87,12 @@
                                 <span class="ms-2">{{ member.color }}</span>
                             </td>
                             <td>
-                                {% if member.active %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Inactive</span>
-                                {% endif %}
+                                <form method="post" action="/roster/toggle_member">
+                                    <input type="hidden" name="name" value="{{ member.name }}">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-success' if member.active else 'btn-secondary' }}">
+                                        {{ 'Active' if member.active else 'Inactive' }}
+                                    </button>
+                                </form>
                             </td>
                             <td>
                                 {% if member.active and member.name not in rotation %}

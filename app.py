@@ -132,6 +132,18 @@ def remove_override():
         flash('Override not found.', 'warning')
     return redirect(url_for('roster'))
 
+@app.route('/roster/toggle_member', methods=['POST'])
+def toggle_member():
+    roster_data = load_roster()
+    name = request.form.get('name')
+    for member in roster_data.get('team_members', []):
+        if member.get('name') == name:
+            member['active'] = not member.get('active', True)
+            break
+    save_roster(roster_data)
+    flash(f'{name} status toggled.', 'success')
+    return redirect(url_for('roster'))
+
 @app.route('/roster/update_rotation', methods=['POST'])
 def update_rotation():
     roster_data = load_roster()
@@ -192,7 +204,7 @@ def overtime():
     now = datetime.now()
     year, month = now.year, now.month
     roster_data = load_roster()
-    team_members = roster_data.get('team_members', [])
+    team_members = [m for m in roster_data.get('team_members', []) if m.get('active', True)]
 
     # For GET
     selected_person = request.args.get('person')

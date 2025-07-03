@@ -9,6 +9,14 @@ def load_roster():
     with open(ROSTER_PATH, 'r') as f:
         return json.load(f)
 
+def is_active(person_name):
+    """Check if a person is active in the roster."""
+    roster_data = load_roster()
+    for member in roster_data.get('team_members', []):
+        if member.get('name') == person_name:
+            return member.get('active', True)
+    return False
+
 def get_standby_person(date: str):
     """
     Get the standby person for a given date (YYYY-MM-DD).
@@ -18,7 +26,11 @@ def get_standby_person(date: str):
     roster = load_roster()
     rotation = roster.get('rotation', [])
     overrides = roster.get('overrides', {})
-    if not rotation:
+    
+    # Filter rotation to only include active members
+    active_rotation = [p for p in rotation if is_active(p)]
+    
+    if not active_rotation:
         return None
     # Check overrides
     if date in overrides:
@@ -29,8 +41,8 @@ def get_standby_person(date: str):
     d = datetime.strptime(date, '%Y-%m-%d')
     epoch_date = datetime.strptime(epoch, '%Y-%m-%d')
     weeks_since = (d - epoch_date).days // 7
-    idx = weeks_since % len(rotation)
-    return rotation[idx]
+    idx = weeks_since % len(active_rotation)
+    return active_rotation[idx]
 
 def test_rotation_manager():
     """Test function: print standby person for a list of dates."""

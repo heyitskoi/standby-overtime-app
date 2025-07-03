@@ -18,17 +18,18 @@
     {
       "name": "junior",
       "color": "#ff0000",
-      "active": true
+      "active": false
     },
     {
       "name": "test-1",
       "color": "#00ff2a",
-      "active": true
+      "active": false
     }
   ],
   "overrides": {},
   "rotation": [
+    "test-1",
     "errol",
-    "test-1"
+    "Braden"
   ]
 }
