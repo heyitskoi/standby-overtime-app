@@ -242,11 +242,12 @@
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button type="button" class="btn btn-outline-secondary" 
-                                                    onclick="viewOvertimeDetails('{{ log.id }}')" title="View Details">
+                                                    onclick="viewOvertimeDetails('{{ log.id }}', '{{ log.person }}', '{{ log.year }}', '{{ log.month }}')" title="View Details">
                                                     <i class="bi bi-eye"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-primary" 
-                                                    onclick="editOvertime('{{ log.id }}')" title="Edit">
+                                                    data-person="{{ log.person }}" data-year="{{ log.year }}" data-month="{{ log.month }}" data-id="{{ log.id }}"
+                                                    onclick="editOvertime(this)" title="Edit">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                             </div>
@@ -321,6 +322,46 @@
                     <i class="bi bi-pencil"></i> Edit
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Overtime Modal -->
+<div class="modal fade" id="editOvertimeModal" tabindex="-1" aria-labelledby="editOvertimeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editOvertimeForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editOvertimeModalLabel">Edit Overtime Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit_person" name="person">
+                    <input type="hidden" id="edit_year" name="year">
+                    <input type="hidden" id="edit_month" name="month">
+                    <input type="hidden" id="edit_id" name="id">
+                    <div class="mb-3">
+                        <label for="edit_start_time" class="form-label">Start Time</label>
+                        <input type="datetime-local" class="form-control" id="edit_start_time" name="start_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_end_time" class="form-label">End Time</label>
+                        <input type="datetime-local" class="form-control" id="edit_end_time" name="end_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_issue_description" class="form-label">Issue Description</label>
+                        <textarea class="form-control" id="edit_issue_description" name="issue_description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_resolution_notes" class="form-label">Resolution Notes</label>
+                        <textarea class="form-control" id="edit_resolution_notes" name="resolution_notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -518,8 +559,7 @@ function exportOvertimeData() {
 }
 
 // View overtime details
-function viewOvertimeDetails(id) {
-    // This would typically make an AJAX call to get overtime details
+function viewOvertimeDetails(id, person, year, month) {
     document.getElementById('overtimeDetailsContent').innerHTML = `
         <div class="text-center">
             <div class="spinner-border text-primary" role="status">
@@ -528,16 +568,76 @@ function viewOvertimeDetails(id) {
             <p class="mt-3">Loading overtime details...</p>
         </div>
     `;
-    
     const modal = new bootstrap.Modal(document.getElementById('overtimeDetailsModal'));
     modal.show();
+    fetch(`/overtime/edit/${encodeURIComponent(person)}/${year}/${month}/${id}`)
+        .then(res => res.json())
+        .then(log => {
+            if (log.error) {
+                document.getElementById('overtimeDetailsContent').innerHTML = `<div class='alert alert-danger'>${log.error}</div>`;
+                return;
+            }
+            document.getElementById('overtimeDetailsContent').innerHTML = `
+                <dl class="row">
+                    <dt class="col-sm-3">Person</dt><dd class="col-sm-9">${log.person}</dd>
+                    <dt class="col-sm-3">Start Time</dt><dd class="col-sm-9">${log.start_time}</dd>
+                    <dt class="col-sm-3">End Time</dt><dd class="col-sm-9">${log.end_time}</dd>
+                    <dt class="col-sm-3">Duration</dt><dd class="col-sm-9">${log.duration_hours} hours</dd>
+                    <dt class="col-sm-3">Issue</dt><dd class="col-sm-9">${log.issue_description || '-'}</dd>
+                    <dt class="col-sm-3">Resolution</dt><dd class="col-sm-9">${log.resolution_notes || '-'}</dd>
+                </dl>
+            `;
+        });
 }
 
 // Edit overtime
-function editOvertime(id) {
-    // This would typically redirect to an edit page or show edit modal
-    alert('Edit functionality would be implemented here');
+function editOvertime(btn) {
+    const person = btn.getAttribute('data-person');
+    const year = btn.getAttribute('data-year');
+    const month = btn.getAttribute('data-month');
+    const id = btn.getAttribute('data-id');
+    fetch(`/overtime/edit/${encodeURIComponent(person)}/${year}/${month}/${id}`)
+        .then(res => res.json())
+        .then(log => {
+            if (log.error) {
+                alert(log.error);
+                return;
+            }
+            document.getElementById('edit_person').value = person;
+            document.getElementById('edit_year').value = year;
+            document.getElementById('edit_month').value = month;
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_start_time').value = log.start_time.replace(' ', 'T');
+            document.getElementById('edit_end_time').value = log.end_time.replace(' ', 'T');
+            document.getElementById('edit_issue_description').value = log.issue_description || '';
+            document.getElementById('edit_resolution_notes').value = log.resolution_notes || '';
+            const modal = new bootstrap.Modal(document.getElementById('editOvertimeModal'));
+            modal.show();
+        });
 }
+
+document.getElementById('editOvertimeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const person = document.getElementById('edit_person').value;
+    const year = document.getElementById('edit_year').value;
+    const month = document.getElementById('edit_month').value;
+    const id = document.getElementById('edit_id').value;
+    const formData = new FormData(this);
+    fetch(`/overtime/edit/${encodeURIComponent(person)}/${year}/${month}/${id}`, {
+        method: 'POST',
+        body: formData
+    }).then(res => {
+        if (res.redirected) {
+            window.location.href = res.url;
+        } else {
+            return res.json();
+        }
+    }).then(data => {
+        if (data && data.error) {
+            alert(data.error);
+        }
+    });
+});
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {

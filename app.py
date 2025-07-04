@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime, timedelta
 from utils.rotation_manager import get_standby_person, load_roster, save_roster
-from utils.overtime_logger import load_overtime_logs, validate_overtime_entry, save_overtime_entry
+from utils.overtime_logger import load_overtime_logs, validate_overtime_entry, save_overtime_entry, update_overtime_entry
 from config import config, ensure_directories
 
 def get_current_standby_user():
@@ -54,7 +54,23 @@ def dashboard():
     for member in team_members:
         member_logs = load_overtime_logs(member['name'], year, month)
         recent_overtime.extend(member_logs[:2])  # Get 2 most recent per member
-    
+
+    # Add year and month fields to each log in recent_overtime
+    for log in recent_overtime:
+        start_time = log.get('start_time', '')
+        if start_time:
+            date_part = start_time.split('T')[0] if 'T' in start_time else start_time.split(' ')[0]
+            parts = date_part.split('-')
+            if len(parts) == 3:
+                log['year'] = parts[0]
+                log['month'] = int(parts[1])
+            else:
+                log['year'] = ''
+                log['month'] = ''
+        else:
+            log['year'] = ''
+            log['month'] = ''
+
     # Sort by start time and get 5 most recent
     recent_overtime.sort(key=lambda x: x.get('start_time', ''), reverse=True)
     recent_overtime = recent_overtime[:5]
@@ -359,7 +375,7 @@ def overtime():
 
     # For GET
     selected_person = request.args.get('person')
-    if not selected_person:
+    if selected_person is None:
         today_str = now.strftime('%Y-%m-%d')
         selected_person = get_standby_person(today_str)
 
@@ -392,8 +408,22 @@ def overtime():
 
         return redirect(url_for('overtime', person=person))
 
-    overtime_logs = load_overtime_logs(selected_person, year, month)
-    
+    # Updated logic for 'All Team Members'
+    if selected_person == '':
+        # Combine logs for all active team members
+        overtime_logs = []
+        for member in team_members:
+            member_logs = load_overtime_logs(member['name'], year, month)
+            for log in member_logs:
+                # Ensure the person field is set (for display)
+                if not log.get('person'):
+                    log['person'] = member['name']
+                overtime_logs.append(log)
+        # Sort logs by start_time descending
+        overtime_logs.sort(key=lambda x: x.get('start_time', ''), reverse=True)
+    else:
+        overtime_logs = load_overtime_logs(selected_person, year, month)
+
     # Calculate total hours
     total_hours = 0.0
     for log in overtime_logs:
@@ -403,6 +433,22 @@ def overtime():
             except (ValueError, TypeError):
                 pass
     
+    # Add year and month fields to each log for template use
+    for log in overtime_logs:
+        start_time = log.get('start_time', '')
+        if start_time:
+            # Support both 'YYYY-MM-DD HH:MM' and 'YYYY-MM-DDTHH:MM' formats
+            date_part = start_time.split('T')[0] if 'T' in start_time else start_time.split(' ')[0]
+            parts = date_part.split('-')
+            if len(parts) == 3:
+                log['year'] = parts[0]
+                log['month'] = int(parts[1])
+            else:
+                log['year'] = ''
+                log['month'] = ''
+        else:
+            log['year'] = ''
+            log['month'] = ''
     # Get current standby user
     current_user = get_current_standby_user()
     
@@ -552,6 +598,39 @@ def api_overtime_notifications():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/overtime/edit/<person>/<int:year>/<int:month>/<entry_id>', methods=['GET', 'POST'])
+def edit_overtime_entry(person, year, month, entry_id):
+    if request.method == 'GET':
+        logs = load_overtime_logs(person, year, month)
+        log = next((l for l in logs if l.get('id') == entry_id), None)
+        if log:
+            return jsonify(log)
+        else:
+            return jsonify({'error': 'Log not found'}), 404
+    elif request.method == 'POST':
+        # Get updated fields from form
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time')
+        issue_description = request.form.get('issue_description', '')
+        resolution_notes = request.form.get('resolution_notes', '')
+        valid, duration_or_msg = validate_overtime_entry(start_time, end_time)
+        if not valid:
+            flash(duration_or_msg, 'danger')
+            return redirect(url_for('overtime', person=person))
+        updated_entry = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'duration_hours': f"{duration_or_msg:.2f}",
+            'issue_description': issue_description,
+            'resolution_notes': resolution_notes
+        }
+        updated = update_overtime_entry(person, year, month, entry_id, updated_entry)
+        if updated:
+            flash('Overtime entry updated!', 'success')
+        else:
+            flash('Log not found.', 'danger')
+        return redirect(url_for('overtime', person=person))
 
 if __name__ == '__main__':
     app.run(debug=True) 

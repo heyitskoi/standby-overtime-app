@@ -3,10 +3,12 @@ import csv
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import uuid
 
 LOGS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
 
 FIELDNAMES = [
+    'id',
     'person',
     'start_time',
     'end_time',
@@ -28,6 +30,8 @@ def load_overtime_logs(person, year, month):
         with open(path, 'r', newline='') as f:
             reader = csv.DictReader(f)
             for row in reader:
+                if 'id' not in row or not row['id']:
+                    row['id'] = str(uuid.uuid4())
                 logs.append(row)
     return logs
 
@@ -45,11 +49,31 @@ def validate_overtime_entry(start_str, end_str):
 def save_overtime_entry(person, year, month, entry):
     path = get_log_path(person, year, month)
     file_exists = os.path.exists(path)
+    if 'id' not in entry or not entry['id']:
+        entry['id'] = str(uuid.uuid4())
     with open(path, 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         if not file_exists:
             writer.writeheader()
         writer.writerow(entry)
+
+def update_overtime_entry(person, year, month, entry_id, updated_entry):
+    path = get_log_path(person, year, month)
+    logs = []
+    updated = False
+    if os.path.exists(path):
+        with open(path, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get('id') == entry_id:
+                    row.update(updated_entry)
+                    updated = True
+                logs.append(row)
+        with open(path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+            writer.writeheader()
+            writer.writerows(logs)
+    return updated
 
 def export_logs_to_pdf(person, year, month, output_pdf_path):
     """

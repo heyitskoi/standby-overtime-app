@@ -12,13 +12,13 @@
     },
     {
       "name": "errol-test",
-      "color": "#1e3752",
+      "color": "#d400ff",
       "active": false
     },
     {
       "name": "junior",
       "color": "#ff0000",
-      "active": false
+      "active": true
     },
     {
       "name": "test-1",
@@ -29,6 +29,7 @@
   "overrides": {},
   "rotation": [
     "Errol Caughey",
+    "junior",
     "Braden"
   ]
 }

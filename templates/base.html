@@ -994,6 +994,137 @@
             background-clip: text;
         }
 
+        /* Header specific styles */
+        .navbar {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .navbar .nav-link {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .navbar .dropdown-menu {
+            margin-top: 0.5rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .navbar .dropdown-item {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin: 0.125rem 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(4px);
+        }
+
+        .navbar .dropdown-header {
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Header stats styling */
+        .header-stats {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+
+        .header-stats .small {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .header-stats .fw-bold {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Notification badge animation */
+        .badge {
+            animation: pulse 2s infinite;
+        }
+
+        /* Avatar styling */
+        .avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-bg);
+            transition: all 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Breadcrumb styling */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        .breadcrumb-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Mobile responsive header */
+        @media (max-width: 768px) {
+            .navbar .container-fluid {
+                padding: 0 0.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .header-stats {
+                display: none;
+            }
+        }
+
         /* Enhanced Text Colors */
         .text-primary {
             color: #667eea !important;
@@ -1458,15 +1589,95 @@
         <div class="flex-grow-1">
             <nav class="navbar navbar-expand-lg navbar-light shadow-sm">
                 <div class="container-fluid">
-                    <span class="navbar-brand mb-0 h1">
-                        <i class="bi bi-lightning-charge text-primary me-2" aria-hidden="true"></i>
-                        Standby Overtime App
-                    </span>
-                    <div class="navbar-nav ms-auto">
-                        <span class="navbar-text">
-                            <i class="bi bi-clock text-muted me-1" aria-hidden="true"></i>
-                            <span id="currentTime"></span>
+                    <!-- Left side: Brand and breadcrumb -->
+                    <div class="d-flex align-items-center">
+                        <span class="navbar-brand mb-0 h1 me-4">
+                            <i class="bi bi-lightning-charge text-primary me-2" aria-hidden="true"></i>
+                            Standby Overtime Management
                         </span>
+                        <nav aria-label="breadcrumb" class="d-none d-md-block">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <i class="bi bi-house-door text-muted me-1" aria-hidden="true"></i>
+                                    <a href="/dashboard" class="text-decoration-none">Home</a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page" id="currentPage">
+                                    <span id="pageTitle">Dashboard</span>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <!-- Center: Quick stats (hidden on mobile) -->
+                    <div class="d-none d-lg-flex align-items-center mx-auto">
+                        <div class="d-flex align-items-center me-4">
+                            <div class="text-center me-3">
+                                <div class="small text-muted">Current Standby</div>
+                                <div class="fw-bold text-primary" id="headerCurrentStandby">-</div>
+                            </div>
+                            <div class="text-center me-3">
+                                <div class="small text-muted">Today's Hours</div>
+                                <div class="fw-bold text-success" id="headerTodayHours">0</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="small text-muted">Month Total</div>
+                                <div class="fw-bold text-info" id="headerMonthHours">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right side: Time, date, notifications, and user menu -->
+                    <div class="navbar-nav ms-auto align-items-center">
+                        <!-- Notifications -->
+                        <div class="nav-item dropdown me-3">
+                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell fs-5" aria-hidden="true"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="headerNotificationCount" style="display: none;">
+                                    0
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" id="notificationDropdown">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-center text-muted" href="#" id="noNotifications">No new notifications</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Time and Date -->
+                        <div class="nav-item me-3 d-none d-md-block">
+                            <div class="text-end">
+                                <div class="small text-muted" id="currentDate">Loading...</div>
+                                <div class="fw-bold" id="currentTime">--:--</div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile time only -->
+                        <div class="nav-item me-3 d-md-none">
+                            <span class="navbar-text">
+                                <i class="bi bi-clock text-muted me-1" aria-hidden="true"></i>
+                                <span id="mobileCurrentTime">--:--</span>
+                            </span>
+                        </div>
+
+                        <!-- Quick Actions Dropdown -->
+                        <div class="nav-item dropdown me-3">
+                            <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Quick Actions</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/calendar"><i class="bi bi-calendar-plus me-2"></i>Add Event</a></li>
+                                <li><a class="dropdown-item" href="/roster"><i class="bi bi-person-plus me-2"></i>Add Person</a></li>
+                                <li><a class="dropdown-item" href="/overtime"><i class="bi bi-clock-history me-2"></i>Log Overtime</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="refreshPage()"><i class="bi bi-arrow-clockwise me-2"></i>Refresh</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="toggleFullscreen()"><i class="bi bi-fullscreen me-2"></i>Fullscreen</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- User Menu -->
+                        <!-- (Removed: No authentication/user system yet) -->
                     </div>
                 </div>
             </nav>
@@ -1506,10 +1717,12 @@
             init() {
                 this.setupEventListeners();
                 this.updateActiveNavLink();
+                this.updatePageInfo();
                 this.updateTime();
                 this.updateSidebarStats();
                 this.startTimers();
                 this.checkForNotifications();
+                this.setupHeaderFunctions();
             }
 
             setupEventListeners() {
@@ -1554,6 +1767,56 @@
                 });
             }
 
+            updatePageInfo() {
+                const pageTitleElement = document.getElementById('pageTitle');
+                const currentPageElement = document.getElementById('currentPage');
+                
+                if (pageTitleElement && currentPageElement) {
+                    const pageTitles = {
+                        'dashboard': 'Dashboard',
+                        'calendar': 'Calendar',
+                        'roster': 'Roster',
+                        'overtime': 'Overtime'
+                    };
+                    
+                    const title = pageTitles[this.currentRoute] || 'Dashboard';
+                    pageTitleElement.textContent = title;
+                    currentPageElement.textContent = title;
+                }
+            }
+
+            setupHeaderFunctions() {
+                // Make utility functions globally available
+                window.refreshPage = () => {
+                    window.location.reload();
+                };
+
+                window.toggleFullscreen = () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                };
+
+                window.exportData = () => {
+                    // Placeholder for export functionality
+                    alert('Export functionality will be implemented soon!');
+                };
+
+                window.showHelp = () => {
+                    // Placeholder for help functionality
+                    alert('Help documentation will be available soon!');
+                };
+
+                window.logout = () => {
+                    if (confirm('Are you sure you want to logout?')) {
+                        // Placeholder for logout functionality
+                        window.location.href = '/logout';
+                    }
+                };
+            }
+
             toggleSidebar() {
                 this.sidebar.classList.toggle('show');
                 this.sidebarOverlay.classList.toggle('show');
@@ -1570,7 +1833,20 @@
                     minute: '2-digit',
                     hour12: true
                 });
+                const dateString = now.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // Update all time elements
                 this.currentTimeElement.textContent = timeString;
+                const mobileTimeElement = document.getElementById('mobileCurrentTime');
+                if (mobileTimeElement) mobileTimeElement.textContent = timeString;
+                
+                // Update date
+                const dateElement = document.getElementById('currentDate');
+                if (dateElement) dateElement.textContent = dateString;
             }
 
             async updateSidebarStats() {
@@ -1584,6 +1860,10 @@
                     if (response.ok) {
                         const data = await response.json();
                         this.currentStandbyElement.textContent = data.current_standby || 'None';
+                        
+                        // Update header stats
+                        const headerStandbyElement = document.getElementById('headerCurrentStandby');
+                        if (headerStandbyElement) headerStandbyElement.textContent = data.current_standby || 'None';
                     }
 
                     // Fetch total hours for current month
@@ -1591,6 +1871,18 @@
                     if (hoursResponse.ok) {
                         const hoursData = await hoursResponse.json();
                         this.totalHoursElement.textContent = hoursData.total_hours || '0';
+                        
+                        // Update header stats
+                        const headerMonthHoursElement = document.getElementById('headerMonthHours');
+                        if (headerMonthHoursElement) headerMonthHoursElement.textContent = hoursData.total_hours || '0';
+                    }
+
+                    // Fetch today's hours
+                    const todayResponse = await fetch('/api/today-hours');
+                    if (todayResponse.ok) {
+                        const todayData = await todayResponse.json();
+                        const headerTodayHoursElement = document.getElementById('headerTodayHours');
+                        if (headerTodayHoursElement) headerTodayHoursElement.textContent = todayData.today_hours || '0';
                     }
 
                 } catch (error) {
@@ -1598,6 +1890,16 @@
                     // Fallback to static data
                     this.currentStandbyElement.textContent = 'Active';
                     this.totalHoursElement.textContent = '0';
+                    
+                    // Update header fallbacks
+                    const headerStandbyElement = document.getElementById('headerCurrentStandby');
+                    if (headerStandbyElement) headerStandbyElement.textContent = 'Active';
+                    
+                    const headerMonthHoursElement = document.getElementById('headerMonthHours');
+                    if (headerMonthHoursElement) headerMonthHoursElement.textContent = '0';
+                    
+                    const headerTodayHoursElement = document.getElementById('headerTodayHours');
+                    if (headerTodayHoursElement) headerTodayHoursElement.textContent = '0';
                 } finally {
                     // Remove loading state
                     this.currentStandbyStat.classList.remove('loading');
@@ -1607,6 +1909,9 @@
 
             async checkForNotifications() {
                 try {
+                    let totalNotifications = 0;
+                    const notifications = [];
+
                     // Check for roster changes
                     const rosterResponse = await fetch('/api/roster-notifications');
                     if (rosterResponse.ok) {
@@ -1614,6 +1919,11 @@
                         if (data.count > 0) {
                             this.rosterNotifications.textContent = data.count;
                             this.rosterNotifications.style.display = 'flex';
+                            totalNotifications += data.count;
+                            
+                            if (data.notifications) {
+                                notifications.push(...data.notifications.slice(0, 3));
+                            }
                         }
                     }
 
@@ -1624,8 +1934,57 @@
                         if (data.count > 0) {
                             this.overtimeNotifications.textContent = data.count;
                             this.overtimeNotifications.style.display = 'flex';
+                            totalNotifications += data.count;
+                            
+                            if (data.notifications) {
+                                notifications.push(...data.notifications.slice(0, 3));
+                            }
                         }
                     }
+
+                    // Update header notification count
+                    const headerNotificationCount = document.getElementById('headerNotificationCount');
+                    const notificationDropdown = document.getElementById('notificationDropdown');
+                    const noNotifications = document.getElementById('noNotifications');
+
+                    if (headerNotificationCount) {
+                        if (totalNotifications > 0) {
+                            headerNotificationCount.textContent = totalNotifications;
+                            headerNotificationCount.style.display = 'block';
+                        } else {
+                            headerNotificationCount.style.display = 'none';
+                        }
+                    }
+
+                    // Update notification dropdown
+                    if (notificationDropdown && noNotifications) {
+                        if (notifications.length > 0) {
+                            noNotifications.style.display = 'none';
+                            // Clear existing notifications (except header and divider)
+                            const existingNotifications = notificationDropdown.querySelectorAll('.dropdown-item:not(#noNotifications)');
+                            existingNotifications.forEach(item => item.remove());
+                            
+                            // Add new notifications
+                            notifications.forEach(notification => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <a class="dropdown-item" href="${notification.link || '#'}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-${notification.icon || 'info-circle'} me-2 text-${notification.type || 'primary'}"></i>
+                                            <div>
+                                                <div class="small fw-bold">${notification.title}</div>
+                                                <div class="small text-muted">${notification.message}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                `;
+                                notificationDropdown.insertBefore(li, noNotifications.parentElement);
+                            });
+                        } else {
+                            noNotifications.style.display = 'block';
+                        }
+                    }
+
                 } catch (error) {
                     console.warn('Failed to check notifications:', error);
                 }

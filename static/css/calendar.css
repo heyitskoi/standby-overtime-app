@@ -10,18 +10,25 @@
 
 /* Enhanced event styling */
 .fc-event {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-radius: 6px;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(76, 175, 255, 0.15);
+    font-size: 1rem;
+    padding: 6px 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
     border: none;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    position: relative;
 }
 
 .fc-event:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transform: scale(1.04);
+    box-shadow: 0 6px 24px rgba(76, 175, 255, 0.25);
     z-index: 10;
+}
+
+.fc-event .fc-event-title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .fc-event-today {
@@ -98,8 +105,19 @@
 }
 
 /* Day styling */
-.fc-day-today {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.05) 100%) !important;
+.fc-daygrid-day {
+    background: linear-gradient(135deg, #f8faff 0%, #e9f0fb 100%);
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.fc-daygrid-day.fc-day-today {
+    background: linear-gradient(135deg, #fffbe6 0%, #fff3cd 100%);
+    border: 2px solid #ffc107;
+}
+
+.fc-daygrid-day:hover {
+    background: #e3f2fd;
 }
 
 .fc-day-header {
@@ -338,4 +356,48 @@
     .keyboard-shortcuts.show {
         animation: none;
     }
+}
+
+body {
+    background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
+    min-height: 100vh;
+}
+
+.calendar-wrapper, #calendar {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76, 110, 245, 0.12), 0 1.5px 6px rgba(0,0,0,0.04);
+    padding: 2rem;
+    margin: 2rem 0;
+    backdrop-filter: blur(2px);
+    border: 1.5px solid #e0e7ff;
+}
+
+.fc-daygrid-day {
+    background: linear-gradient(135deg, #f3f6fd 0%, #e9f0fb 100%);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.fc-daygrid-day.fc-day-today {
+    background: linear-gradient(135deg, #fffbe6 0%, #ffe9b3 100%);
+    border: 2px solid #ffc107;
+}
+
+.fc-daygrid-day:hover {
+    background: #e3f2fd;
+}
+
+.fc-toolbar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
+}
+
+.fc-toolbar-title {
+    color: #fff !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.08);
 } 
