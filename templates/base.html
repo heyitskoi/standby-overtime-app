@@ -948,16 +948,16 @@
 
         /* Prevent multiple modal backdrops */
         .modal-backdrop {
-            z-index: 1040;
+            z-index: 1054;
         }
 
         .modal-backdrop + .modal-backdrop {
-            z-index: 1039;
+            z-index: 1053;
         }
 
         /* Ensure only one backdrop is visible */
         .modal-backdrop.show {
-            z-index: 1040;
+            z-index: 1054;
         }
 
         /* Remove duplicate backdrops */
@@ -1656,13 +1656,15 @@
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.type === 'childList') {
-                        const backdrops = document.querySelectorAll('.modal-backdrop');
-                        if (backdrops.length > 1) {
-                            // Keep only the first backdrop
-                            for (let i = 1; i < backdrops.length; i++) {
-                                backdrops[i].remove();
+                        setTimeout(() => {
+                            const backdrops = document.querySelectorAll('.modal-backdrop');
+                            if (backdrops.length > 1) {
+                                // Keep only the first backdrop
+                                for (let i = 1; i < backdrops.length; i++) {
+                                    backdrops[i].remove();
+                                }
                             }
-                        }
+                        }, 50);
                     }
                 });
             });
@@ -1674,12 +1676,14 @@
             
             // Clean up modal backdrops when modals are hidden
             document.addEventListener('hidden.bs.modal', function(event) {
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                if (backdrops.length > 1) {
-                    for (let i = 1; i < backdrops.length; i++) {
-                        backdrops[i].remove();
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        for (let i = 1; i < backdrops.length; i++) {
+                            backdrops[i].remove();
+                        }
                     }
-                }
+                }, 150);
             });
         });
 

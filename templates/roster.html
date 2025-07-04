@@ -249,7 +249,7 @@
 
 <!-- Add Member Modal -->
 <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addMemberModalLabel">
@@ -293,7 +293,7 @@
 
 <!-- Add Override Modal -->
 <div class="modal fade" id="addOverrideModal" tabindex="-1" aria-labelledby="addOverrideModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addOverrideModalLabel">
@@ -336,7 +336,7 @@
 
 <!-- Edit Member Modal -->
 <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editMemberModalLabel">
@@ -472,7 +472,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Color picker synchronization
     const colorInputs = document.querySelectorAll('input[type="color"]');
-    const colorTextInputs = document.querySelectorAll('input[type="text"][pattern*="color"]');
+    const colorTextInputs = document.querySelectorAll('input[type="text"][pattern*="[0-9A-Fa-f]{6}"]');
     
     colorInputs.forEach((input, index) => {
         const textInput = colorTextInputs[index];
